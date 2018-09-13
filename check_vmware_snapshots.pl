@@ -206,8 +206,8 @@ foreach my $vm_view ( @{$vms} ) {
     my $vm_snapinfo = $vm_view->{snapshot};
 
     next unless defined $vm_snapinfo;
-    next if (isblacklisted(\$blacklist,$vm_name ));
-    next if (isnotwhitelisted(\$whitelist,$vm_name));
+    next if (!$match_snapshot_names and isblacklisted(\$blacklist,$vm_name ));
+    next if (!$match_snapshot_names and isnotwhitelisted(\$whitelist,$vm_name));
     if ( uc($mode) eq "AGE" ) {
         check_snapshot_age( $vm_name, $vm_snapinfo->{rootSnapshotList} );
     }
@@ -215,6 +215,7 @@ foreach my $vm_view ( @{$vms} ) {
         my %vm_snapshot_count;
         check_snapshot_count( $vm_name, $vm_snapinfo->{rootSnapshotList},
             \%vm_snapshot_count );
+        if(exists $vm_snapshot_count{$vm_name}) {
         my $status = $np->check_threshold( $vm_snapshot_count{$vm_name} );
         if ($status) {
             $np->add_message(
@@ -227,7 +228,7 @@ foreach my $vm_view ( @{$vms} ) {
             $badcount++;
             $worststate = ($status > $worststate ? $status : $worststate);
         }
-
+        }
     }
 #    elsif ( uc($mode) eq "SIZE" ) {
 #        $perfdata_label = "snapshot size";
